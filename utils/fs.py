@@ -1,5 +1,26 @@
 from PIL import Image
 from math import sqrt, floor, ceil
+import binascii
+
+COLORS = [(0,0,0), (255,255,255), (0,250, 0), (0,0,255), (255,0, 0), (255,255,0), (255, 170, 0)]
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 448
+
+def hex2bin(HexInputStr, outFormat=4):
+    '''This function accepts the following two args.
+    1) A Hex number as input string and
+    2) Optional int value that selects the desired Output format(int value 8 for byte and 4 for nibble [default])
+    The function returns binary equivalent value on the first arg.'''
+    int_value = int(HexInputStr, 16)
+    if(outFormat == 8):
+        output_length = 8 * ((len(HexInputStr) + 1 ) // 2) # Byte length output i.e input A is printed as 00001010
+    else:
+        output_length = (len(HexInputStr)) * 4 # Nibble length output i.e input A is printed as 1010
+
+
+    bin_value = f'{int_value:0{output_length}b}' # new style
+    return bin_value
+
 def getClosestColor(c, colors):
     """ Returns closest color in 'colors' to target 'c'. All colors are represented
         as RGB tuples.\n
@@ -56,7 +77,6 @@ def ditherImage(target, colors = None, colorstops = None, saveOutput = True, out
         print("Oh noes! An I/O error! :O")
         return
 
-    COLORS = [(0,0,0), (255,255,255), (0,250, 0), (0,0,255), (255,0, 0), (255,255,0), (255, 170, 0)]
 
     #lambda expression to flatten x,y location
     index = lambda x, y: x + y * width
@@ -90,16 +110,37 @@ def add_margin(pil_img, top, right, bottom, left, color):
     result.paste(pil_img, (left, top))
     return result
 
+def rgb_epaper_matcher(rgb):
+    COLORS = [(0,0,0), (255,255,255), (0,250,0), (0,0,255), (255,0, 0), (255,255,0), (255, 170,0)]
+
+
+def image_to_e_paper_hex_array(image):
+    pix = image.load()
+    hex_array = []
+    for y in range(SCREEN_HEIGHT):
+        for x in range(0, SCREEN_WIDTH - 1, 2):
+            hex_nibble1 = hex2bin(str(COLORS.index(pix[x,y])))
+            hex_nibble2 = hex2bin(str(COLORS.index(pix[x + 1,y])))
+            hex_array.append(hex(int(hex_nibble1 + hex_nibble2, 2)))
+    return hex_array
+
+def hex_array_to_c_bytes_array(hex_array):
+    c_bytes_array = "["
+    for hex in hex_array:
+        c_bytes_array = c_bytes_array + hex + ",\n"
+    c_bytes_array = c_bytes_array[:len(c_bytes_array) - 1] + "]"
+    return c_bytes_array
+
 
 if __name__ == "__main__":
     dith_img = ditherImage("epaper.jpg", outputType="png")
 
-    add_width = (600 - dith_img.width)/2
-    print(dith_img.width)
-    add_height = (448 - dith_img.height)/2
+    add_width = (SCREEN_WIDTH - dith_img.width)/2
+    add_height = (SCREEN_HEIGHT - dith_img.height)/2
     final_img = add_margin(dith_img, floor(add_height), floor(add_width), ceil(add_height), floor(add_width), (255, 255, 255)) 
-
+    hex_array = image_to_e_paper_hex_array(final_img)
+    print(hex_array_to_c_bytes_array(hex_array))
+    print(len(hex_array))
     #dith_img = ditherImage("epaper.jpg", outputType="png")
-    final_img.save("epaper_dither.png")
-    print(final_img.load()[0, 1])
+    final_img.save("epaper_dither.png")    
     final_img.show()

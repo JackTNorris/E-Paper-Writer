@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-//gImage_5in65f: 192*143
+//gImage_5in65f: 600*448
 extern const unsigned char gImage_5in65f[];
 
 /* FILE END */

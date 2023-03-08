@@ -41,7 +41,8 @@ void setup() {
   epd.Clear(EPD_5IN65F_WHITE);
   
   Serial.print("draw image\r\n ");
-  epd.EPD_5IN65F_Display_part(gImage_5in65f, 204, 153, 192, 143);
+  epd.EPD_5IN65F_Display_part(gImage_5in65f, 0, 0, 192, 143);
+    epd.EPD_5IN65F_Display_part(gImage_5in65f, 300, 300, 192, 143);
 
   delay(2000);
 }
