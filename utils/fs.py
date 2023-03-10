@@ -3,8 +3,10 @@ from math import sqrt, floor, ceil
 import binascii
 
 COLORS = [(0,0,0), (255,255,255), (0,250, 0), (0,0,255), (255,0, 0), (255,255,0), (255, 170, 0)]
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 448
+#SCREEN_WIDTH = 230
+#SCREEN_HEIGHT = 70
+SCREEN_WIDTH = 230
+SCREEN_HEIGHT = 230
 
 def hex2bin(HexInputStr, outFormat=4):
     '''This function accepts the following two args.
@@ -69,6 +71,7 @@ def ditherImage(target, colors = None, colorstops = None, saveOutput = True, out
     #attempt to open target image
     try:
         im = Image.open(target)
+        im = im.convert("RGB")
         mode, size = im.mode, im.size
         width, height = size[0], size[1]
         pix = list(im.getdata())
@@ -117,8 +120,8 @@ def rgb_epaper_matcher(rgb):
 def image_to_e_paper_hex_array(image):
     pix = image.load()
     hex_array = []
-    for y in range(SCREEN_HEIGHT):
-        for x in range(0, SCREEN_WIDTH - 1, 2):
+    for y in range(image.height):
+        for x in range(0, image.width - 1, 2):
             hex_nibble1 = hex2bin(str(COLORS.index(pix[x,y])))
             hex_nibble2 = hex2bin(str(COLORS.index(pix[x + 1,y])))
             hex_array.append(hex(int(hex_nibble1 + hex_nibble2, 2)))
@@ -133,14 +136,27 @@ def hex_array_to_c_bytes_array(hex_array):
 
 
 if __name__ == "__main__":
-    dith_img = ditherImage("epaper.jpg", outputType="png")
-
+    im = Image.open("walmart-2.png")
+    im = im.convert("RGB")
+    im.thumbnail(size=(SCREEN_WIDTH,SCREEN_HEIGHT))
+    im.save('walmart-promotion-scaled.jpg', optimize=True)
+    im.close()
+    dith_img = ditherImage("walmart-promotion-scaled.jpg", outputType="png")
     add_width = (SCREEN_WIDTH - dith_img.width)/2
     add_height = (SCREEN_HEIGHT - dith_img.height)/2
+
     final_img = add_margin(dith_img, floor(add_height), floor(add_width), ceil(add_height), floor(add_width), (255, 255, 255)) 
-    hex_array = image_to_e_paper_hex_array(final_img)
+    hex_array = image_to_e_paper_hex_array(dith_img)
     print(hex_array_to_c_bytes_array(hex_array))
     print(len(hex_array))
+    dith_img.show()
+    print(dith_img.width)
+    print(dith_img.height)
+    """
+    print(dith_img.width)
+    print(dith_img.height)
+
     #dith_img = ditherImage("epaper.jpg", outputType="png")
     final_img.save("epaper_dither.png")    
     final_img.show()
+    """
